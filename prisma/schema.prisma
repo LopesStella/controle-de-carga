@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum StatusViagem {
+  PLANEJADA
+  EM_VIAGEM
+  ENTREGUE
+  FINALIZADA
+}
+
+enum FormaPagamento {
+  PIX
+  DINHEIRO
+  TRANSFERENCIA
+  BOLETO
+  OUTRO
+}
+
+model Carga {
+  id           String       @id @default(cuid())
+  numero       Int          @unique @default(autoincrement())
+  data         DateTime     @db.Date
+  cliente      String
+  origem       String
+  destino      String
+  produto      String?
+  pesoKg       Int?
+  valorFrete   Int // centavos
+  status       StatusViagem @default(PLANEJADA)
+  observacoes  String?
+  criadoEm     DateTime     @default(now())
+  atualizadoEm DateTime     @updatedAt
+
+  recebimentos Recebimento[]
+
+  @@index([data])
+}
+
+model Recebimento {
+  id             String         @id @default(cuid())
+  cargaId        String
+  carga          Carga          @relation(fields: [cargaId], references: [id], onDelete: Cascade)
+  data           DateTime       @db.Date
+  valor          Int // centavos
+  formaPagamento FormaPagamento
+  observacao     String?
+  criadoEm       DateTime       @default(now())
+
+  @@index([cargaId])
+}
